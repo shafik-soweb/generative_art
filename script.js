@@ -11,38 +11,38 @@ canvas.height = window.innerHeight;
 // }
 
 // console.log(canvas)
-class Root { 
+// class Root { 
 
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.speedX = Math.random() * 4-2;
-        this.speedY = Math.random() * 4-2;
-        this.maxSize = Math.random() * 7 + (Math.random() * 9);
-        // this.minSize = Math.random() * 40;
-        this.size = 0;
-        this.angle = Math.random() * 10;
-    }
-    update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
+//     constructor(x, y) {
+//         this.x = x;
+//         this.y = y;
+//         this.speedX = Math.random() * 4-2;
+//         this.speedY = Math.random() * 4-2;
+//         this.maxSize = Math.random() * 7 + (Math.random() * 9);
+//         // this.minSize = Math.random() * 40;
+//         this.size = 0;
+//         this.angle = Math.random() * 10;
+//     }
+//     update() {
+//         this.x += this.speedX;
+//         this.y += this.speedY;
 
-        this.size += 0.04;
-        // this.angle += 0.1;
+//         this.size += 0.04;
+//         // this.angle += 0.1;
        
-            if (this.size < this.maxSize) {
+//             if (this.size < this.maxSize) {
         
-                ctx.beginPath()
-                ctx.rect(this.x, this.y,10,10)
-                ctx.fillStyle = 'rgb(200,230,100)'
-                ctx.fill()
-                ctx.strokeStyle = 'rgb(200,230,1)'
-                ctx.stroke()
-                requestAnimationFrame(this.update.bind(this))
-            }
+//                 ctx.beginPath()
+//                 ctx.rect(this.x, this.y,10,10)
+//                 ctx.fillStyle = 'rgb(200,230,100)'
+//                 ctx.fill()
+//                 ctx.strokeStyle = 'rgb(200,230,1)'
+//                 ctx.stroke()
+//                 requestAnimationFrame(this.update.bind(this))
+//             }
 
-    }
-}
+//     }
+// }
 
 // function drawShape(radius) {
 //     ctx.beginPath()
@@ -70,23 +70,83 @@ class Root {
 // startRecording();
 
 
-// class FlowFieldEffect{
-//     #ctx
-//     #width
-//     #height
-//     constructor(ctx, width, height) {
-//         this.#ctx = ctx;
-//         this.#width = width;
-//         this.#height = height;
-//     }
-//     #draw(){
-       
-//     }
-//     animate() {
-//         this.#draw()
-//         requestAnimationFrame(this.animate.bind(this))
-//     }
-// }
+class FlowFieldEffect{
+    #ctx
+    #width
+    #height
+    constructor(ctx, width, height) {
+        this.#ctx = ctx;
+        this.#ctx.strokeStyle = 'white'
+        this.#ctx.lineWidth = 2;
+        this.#width = width;
+        this.#height = height;
+        this.interval = 1000/100//1000 / 100;
+        this.angle = 0;
+        this.lastTime = 0;
+        this.x = 0;
+        this.timer = 0;
+        this.y = 0;
+        this.cellSize = 20;
+        this.gradient;
+        this.radius = 0.01
+        this.vr = 0.05
+        this.#createGradient()
+        this.#ctx.strokeStyle = this.gradient
+
+    }
+    #draw(angle,x,y){
+        const length = 300;
+        this.#ctx.beginPath()
+        this.#ctx.moveTo(x, y)
+
+        onmousemove = e => {   
+            this.x = e.clientX
+            this.y = e.clientY
+        }
+
+        this.#ctx.lineTo(x + Math.cos(angle) * 30,y + Math.sin(angle) * 30)
+        this.#ctx.stroke()
+
+         
+    }
+    #createGradient() {
+        this.gradient = this.#ctx.createLinearGradient(0, 0, this.#width, this.#height)
+        this.gradient.addColorStop("0.1", "#ff5c33")
+        this.gradient.addColorStop("0.2","#ff66b3")
+        this.gradient.addColorStop("0.4","#ccccff")
+        this.gradient.addColorStop("0.6", "#b3ffff")
+        this.gradient.addColorStop("0.8", "#80ff80")
+        this.gradient.addColorStop("0.9","#ffff33")
+        
+        
+        
+    }
+    animate(time) {
+        const deltaTime = time - this.lastTime
+        this.lastTime = time;
+        if (this.timer < this.interval) {
+            this.#ctx.clearRect(0, 0, this.#width, this.#height)
+            this.radius += this.vr
+            // this.#ctx.lineWidth += 0.1
+            for (let y = 0; y < this.#height; y+= this.cellSize) {
+                for (let x = 0; x < this.#width; x += this.cellSize) {
+                    const angle = Math.cos(x* 0.01) * this.radius + Math.sin(y*0.01) * this.radius
+                    // const angle = 5**2 + 5**2
+                    this.#draw(angle,x,y)
+                    
+                }
+                
+            }
+            this.timer = 0
+        } else {
+            this.timer += deltaTime
+        }
+        
+          
+
+        requestAnimationFrame(this.animate.bind(this))
+    }
+}
 
 
 
@@ -108,7 +168,12 @@ window.addEventListener('keypress', function (e) {
         startRecording()
     }
 })
-window.addEventListener('mousemove', function (e) {
+
+window.onload = function () {
+    
+    const field = new FlowFieldEffect(ctx, canvas.width, canvas.height)
+    field.animate()
+    window.addEventListener('mousemove', function (e) {
     // for (let i = 300; i < 1920 - 300; i+=80){
     //     for (let j = 300; j < 1080 - 300; j+=80){
     //         const root = new Root(i, j);
@@ -116,10 +181,12 @@ window.addEventListener('mousemove', function (e) {
     //     }
     // }
     
-    const root = new Root(e.x, e.y)
-    root.update()
+    // const root = new Root(e.x, e.y)
+    // root.update()
+        // field.animate(e.x,e.y)
+    
 })
-
+}
 // // function save() {
 // //     const data = canvas.toDataURL()
 // //     console.log(data)
